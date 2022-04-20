@@ -1,0 +1,108 @@
+<html>
+
+<head>
+    <title>抖音浏览器</title>
+    <script src="https://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <center> <video style="height:100vh;max-height:950px;display:inline-block;" id="show-video-player" controls autoplay
+            loop>
+        </video></center>
+    <pre id="show-video-info" style="position:absolute;top:0;right:0;"></pre>
+    <script>
+        $("#show-video-player").hide();
+        $('#show-video-info').hide();
+        window.allInfos = {};
+    </script>
+    <table class="table table-bordered table-striped table-hover table-condensed"
+        style="height:100vh;max-height:1080px;display:inline-block;overflow-y: scroll;">
+        <thead>
+            <tr id="list-info-head"></tr>
+        </thead>
+        <tbody id="list-info"></tbody>
+    </table>
+    <h2>数据列表</h2>
+    <iframe name="list" id="list" src="../datas" style="width:90vw;height:50vh"></iframe>
+    <script>
+        window.showVideo = (key) => {
+            $("#show-video-player").attr('src', `../datas/${key}.mp4`).show();
+            $("#show-video-info").html(allInfos[key]).show();
+            scrollTo(0, 0);
+        }
+        (() => {
+
+            let infoTitles = [
+                "视频KID:\t",
+                "视频名称:\t",
+                "作者昵称:\t",
+                "作者抖音号:\t",
+                "作者uid:\t",
+                "作者sid:\t",
+                "简介:\n",
+            ];
+            let infoTitlesReg = new RegExp(
+                `(${infoTitles
+                    .map((v) => v.replace("\t", "\\t").replace("\n", "\\n"))
+                    .join("|")})`,
+                "gm"
+            );
+
+            /**添加一行信息*/
+            const addInfoLine = (() => {
+                const heads = {};
+                const head = $("#list-info-head");
+                const body = $("#list-info");
+                /**
+                 * @param {{[k in string]:string}} info
+                 * @param {string} key
+                */
+                return (info, key) => {
+                    Object.keys(info).filter(t => isNaN(heads[t])).forEach(title => {
+                        const index = Object.keys(heads).length;
+                        heads[title] = index;
+                        console.log(title);
+                        head.append(`<th>${title}</th>`);
+                    });
+                    const data = Object.keys(heads).map(() => '-');
+                    for (const title in info) {
+                        data[heads[title]] = info[title];
+                    }
+                    body.append(`<tr onclick="showVideo('${key}')">${data.map(txt => `<td>${txt}</td>`).join("")}</tr>`);
+                }
+            })();
+            /**
+             * 处理视频信息文件
+             * @param {string} name
+             */
+            const handleVideoTxt = (name) => {
+                $.ajax(`../datas/${name}`).done(str => {
+                    const key = name.substring(0, 19);
+                    allInfos[key] = str;
+                    let nowTitle = "";
+                    let nowInfo = "";
+                    let infos = {};
+                    str.split(infoTitlesReg).forEach((txt) => {
+                        if (infoTitles.includes(txt)) {
+                            if (nowTitle) infos[nowTitle] = nowInfo.replace(/\n/g, '<br>');
+                            (nowTitle = txt), (nowInfo = "");
+                        } else nowInfo += txt;
+                    });
+                    // if (nowTitle) infos[nowTitle] = nowInfo.replace(/\n/g, '<br>');
+                    addInfoLine(infos, key);
+                })
+            }
+            const list = $.ajax("../datas").done(data => data
+                .replace(/<.*?>/g, '')
+                .replace(/ /g, '\n')
+                .split(/( |\n)/)
+                .filter(v => v.endsWith('.txt'))
+                .map(v => v.trim())
+                .forEach(handleVideoTxt)
+            );
+        })();
+    </script>
+</body>
+
+</html>

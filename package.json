@@ -1,0 +1,21 @@
+{
+    "name": "spider_douyin",
+    "type": "module",
+    "version": "1.0.0",
+    "homepage": "https://git.yuanlu.bid/yuanlu/spider_douyin",
+    "description": "Spider for Douyin",
+    "scripts": {
+        "spider": "node src/spider.js",
+        "web": "node src/web.js"
+    },
+    "keywords": [
+        "douyin",
+        "spider"
+    ],
+    "author": "yuanlu",
+    "license": "AGPL-3.0",
+    "dependencies": {
+        "express": "^4.17.3",
+        "node-fetch": "^3.2.3"
+    }
+}
